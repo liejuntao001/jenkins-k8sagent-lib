@@ -1,0 +1,7 @@
+spec:
+  containers:
+  - name: pg
+    image: postgres:9.5.19
+    # better to use your own
+    #image: docker.example.com/pg:v1.0.0
+    tty: true

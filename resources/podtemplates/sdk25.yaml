@@ -1,0 +1,6 @@
+spec:
+  containers:
+  - name: jnlp
+    env:
+    - name: USE_SDK25
+      value: true

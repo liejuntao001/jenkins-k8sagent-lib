@@ -1,0 +1,39 @@
+spec:
+  hostAliases:
+  - ip: "192.168.1.15"
+    hostnames:
+    - "jenkins.example.com"
+  #imagePullSecrets:
+  #- name: regcred
+  volumes:
+  - hostPath:
+      path: /data/jenkins/repo_mirror
+      type: ""
+    name: volume-0
+  containers:
+  - name: jnlp
+    image: jenkinsci/jnlp-slave:3.29-1
+    # better to use your own jenkins slave
+    #image: docker.example.com/jenkins_slave:v1.0.0
+    imagePullPolicy: Always
+    command:
+    - /usr/local/bin/jenkins-slave
+    volumeMounts:
+    - mountPath: /home/jenkins/repo_cache
+      name: volume-0
+  #initContainers:
+  #- name: init-maven-cache
+  #  # use your own cache
+  #  image: docker.example.com/maven-cache-backup:v1.0.0
+  #  imagePullPolicy: Always
+  #  command: ['sh', '-c', 'ls -al /home/jenkins/ && cp -aR /home/jenkins/.m2 /data/ && ls -al /data/']
+  #  volumeMounts:
+  #  - mountPath: /data
+  #    name: workspace-volume
+  #- name: init-gradle-cache
+  #  image: docker.example.com/gradle-cache-backup:v1.0.0
+  #  imagePullPolicy: Always
+  #  command: ['sh', '-c', 'ls -al /home/jenkins/ && cp -aR /home/jenkins/.gradle /data/ && ls -al /data/']
+  #  volumeMounts:
+  #  - mountPath: /data
+  #    name: workspace-volume

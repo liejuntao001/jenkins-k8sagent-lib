@@ -1,0 +1,77 @@
+plugins {
+  id 'groovy'
+}
+
+group 'com.github.liejuntao001'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+  jcenter()
+}
+
+dependencies {
+  compile 'org.codehaus.groovy:groovy-all:2.4.6'
+  compile 'org.yaml:snakeyaml:1.25'
+  testCompile "junit:junit:4.12"
+  testCompile "org.mockito:mockito-core:2.+"
+  testCompile "com.lesfurets:jenkins-pipeline-unit:1.1"
+}
+
+// this is required if you need @Grab a lib
+compileGroovy {
+  groovyOptions.configurationScript = file("config.groovy")
+}
+
+sourceSets {
+  main {
+    groovy {
+      // all code files will be in either of the folders
+      srcDirs = ['src', 'vars']
+    }
+    resources {
+      srcDirs = ['resources']
+    }
+  }
+  test {
+    groovy {
+      srcDirs 'test'
+    }
+  }
+}
+
+test {
+  // delete old test reports
+  dependsOn cleanTest
+
+  // don't stop if tests fail
+  ignoreFailures = true
+
+  // minimize logging
+  testLogging.maxGranularity = 0
+
+  // show stdout from tests
+  onOutput { dest, event -> print event.message }
+
+  // show test results
+  def results = []
+  afterTest { desc, result -> println "${desc.className.split("\\.")[-1]}: ${desc.name}: ${result.resultType}" }
+  afterSuite { desc, result ->
+    if (desc.className) {
+      results << result
+    }
+  }
+
+  // show summary
+  doLast {
+    println "Tests: ${results.sum { it.testCount }}, Failures: ${results.sum { it.failedTestCount }}" +
+        ", Errors: ${results.sum { it.exceptions.size() }}, Skipped: ${results.sum { it.skippedTestCount }}"
+  }
+
+  // this is required for unit testing behind a proxy
+  systemProperty "http.proxyHost", System.getProperty('http.proxyHost')
+  systemProperty "http.proxyPort", System.getProperty('http.proxyPort')
+  systemProperty "https.proxyHost", System.getProperty('https.proxyHost')
+  systemProperty "https.proxyPort", System.getProperty('https.proxyPort')
+}

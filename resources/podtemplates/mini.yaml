@@ -1,0 +1,8 @@
+spec:
+  containers:
+  - name: jnlp
+    resources:
+      limits:
+        memory: 2Gi
+      requests:
+        memory: 1Gi

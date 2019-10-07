@@ -1,0 +1,12 @@
+spec:
+  nodeSelector:
+    builder: "fast"
+  containers:
+  - name: jnlp
+    resources:
+      limits:
+        memory: 31Gi
+        cpu: 14
+      requests:
+        memory: 16Gi
+        cpu: 8

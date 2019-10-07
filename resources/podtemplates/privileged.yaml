@@ -1,0 +1,18 @@
+spec:
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: privileged
+            operator: In
+            values:
+            - true
+        topologyKey: kubernetes.io/hostname
+  containers:
+  - name: jnlp
+    securityContext:
+      privileged: true
+metadata:
+  labels:
+    privileged: true
