@@ -11,7 +11,7 @@ def call(Map opts = [:]) {
   String cloud = opts.get('cloud', 'kubernetes')
   def ret = [:]
 
-  def comps = name.tokenize('\\+')
+  def comps = name.split('\\+|-').toList()
 
   if (name != 'base') {
     comps = comps.plus(0, 'base')
