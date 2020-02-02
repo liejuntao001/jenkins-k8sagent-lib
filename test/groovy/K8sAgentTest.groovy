@@ -188,6 +188,54 @@ metadata:
   labels:
     privileged: true"""
 
+  def small_dind_yaml = """spec:
+  hostAliases:
+  - ip: "192.168.1.15"
+    hostnames:
+    - "jenkins.example.com"
+  volumes:
+  - hostPath:
+      path: /data/jenkins/repo_mirror
+      type: ""
+    name: volume-0
+  - name: dind-storage
+    emptyDir: {}
+  containers:
+  - name: jnlp
+    image: jenkinsci/jnlp-slave:3.29-1
+    imagePullPolicy: Always
+    command:
+    - /usr/local/bin/jenkins-slave
+    volumeMounts:
+    - mountPath: /home/jenkins/repo_cache
+      name: volume-0
+    resources:
+      limits:
+        memory: 8Gi
+      requests:
+        memory: 4Gi
+        cpu: 2
+  - name: docker
+    image: docker:19.03.3
+    command:
+    - cat
+    tty: true
+    env:
+    - name: DOCKER_HOST
+      value: tcp://localhost:2375
+  - name: dind
+    image: docker:19.03.3-dind
+    securityContext:
+      privileged: true
+    env:
+    - name: DOCKER_TLS_CERTDIR
+      value: ''
+    args:
+    - "--mtu=1440"
+    volumeMounts:
+      - name: dind-storage
+        mountPath: /var/lib/docker"""
+
   @Before
   void setUp() {
     super.setUp()
@@ -289,6 +337,22 @@ metadata:
     ]
 
     def ret = agent(name: 'small+privileged')
+
+    assertEquals "results", ret.entrySet().containsAll(expected.entrySet()), true
+    //assertEquals "results", expected.entrySet(), ret.entrySet()
+  }
+
+  @Test
+  void testDind() {
+    def expected_yaml = small_dind_yaml
+    def processed_yaml = parser.merge([expected_yaml.toString()])
+
+    def expected = [
+        cloud: 'kubernetes',
+        yaml : processed_yaml
+    ]
+
+    def ret = agent(name: 'small-dind')
 
     assertEquals "results", ret.entrySet().containsAll(expected.entrySet()), true
     //assertEquals "results", expected.entrySet(), ret.entrySet()
