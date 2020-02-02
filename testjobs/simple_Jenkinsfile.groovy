@@ -4,7 +4,7 @@
 
 pipeline {
   agent {
-    kubernetes(k8sagent(name: 'mini+pg'))
+    kubernetes(k8sagent(name: 'mini-pg'))
   }
   stages {
     stage('demo') {

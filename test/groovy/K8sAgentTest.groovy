@@ -147,7 +147,7 @@ class K8sAgentTest extends BasePipelineTest {
     image: postgres:9.5.19
     tty: true"""
 
-  def small_priviliged_yaml = """spec:
+  def small_privileged_yaml = """spec:
   hostAliases:
   - ip: "192.168.1.15"
     hostnames:
@@ -280,7 +280,7 @@ metadata:
 
   @Test
   void testPrivileged() {
-    def expected_yaml = small_priviliged_yaml
+    def expected_yaml = small_privileged_yaml
     def processed_yaml = parser.merge([expected_yaml.toString()])
 
     def expected = [
