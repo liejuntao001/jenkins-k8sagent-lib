@@ -236,6 +236,28 @@ metadata:
       - name: dind-storage
         mountPath: /var/lib/docker"""
 
+  def selector_yaml = """spec:
+  hostAliases:
+  - ip: "192.168.1.15"
+    hostnames:
+    - "jenkins.example.com"
+  volumes:
+  - hostPath:
+      path: /data/jenkins/repo_mirror
+      type: ""
+    name: volume-0
+  containers:
+  - name: jnlp
+    image: jenkinsci/jnlp-slave:3.29-1
+    imagePullPolicy: Always
+    command:
+    - /usr/local/bin/jenkins-slave
+    volumeMounts:
+    - mountPath: /home/jenkins/repo_cache
+      name: volume-0
+  nodeSelector:
+    kubernetes.io/hostname: worker1"""
+
   @Before
   void setUp() {
     super.setUp()
@@ -353,6 +375,38 @@ metadata:
     ]
 
     def ret = agent(name: 'small-dind')
+
+    assertEquals "results", ret.entrySet().containsAll(expected.entrySet()), true
+    //assertEquals "results", expected.entrySet(), ret.entrySet()
+  }
+
+  @Test
+  void testNoSelector() {
+    def expected_yaml = base_yaml
+    def processed_yaml = parser.merge([expected_yaml.toString()])
+
+    def expected = [
+        cloud: 'kubernetes',
+        yaml : processed_yaml
+    ]
+
+    def ret = agent(name: 'base')
+
+    assertEquals "results", ret.entrySet().containsAll(expected.entrySet()), true
+    //assertEquals "results", expected.entrySet(), ret.entrySet()
+  }
+
+  @Test
+  void testSelector() {
+    def expected_yaml = selector_yaml
+    def processed_yaml = parser.merge([expected_yaml.toString()])
+
+    def expected = [
+        cloud: 'kubernetes',
+        yaml : processed_yaml,
+    ]
+
+    def ret = agent(name: 'base', selector: 'kubernetes.io/hostname: worker1')
 
     assertEquals "results", ret.entrySet().containsAll(expected.entrySet()), true
     //assertEquals "results", expected.entrySet(), ret.entrySet()

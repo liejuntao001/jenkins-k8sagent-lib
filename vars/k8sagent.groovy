@@ -9,6 +9,8 @@ def call(Map opts = [:]) {
   String defaultLabel = "${name.replace('+', '_')}-${UUID.randomUUID().toString()}"
   String label = opts.get('label', defaultLabel)
   String cloud = opts.get('cloud', 'kubernetes')
+  String nodeSelector = opts.get('selector', '')
+
   def ret = [:]
 
   def comps = name.split('\\+|-').toList()
@@ -22,6 +24,15 @@ def call(Map opts = [:]) {
   for (c in comps) {
     template = libraryResource 'podtemplates/' + c + '.yaml'
     templates.add(template)
+  }
+
+  if (nodeSelector) {
+    def selector = """
+spec:
+  nodeSelector:
+    ${nodeSelector}
+"""
+    templates.add(selector)
   }
 
   def myyaml = new MyYaml()
