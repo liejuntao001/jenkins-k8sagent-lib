@@ -265,6 +265,35 @@ metadata:
     image: hrektts/doxygen:latest
     tty: true"""
 
+  def small_doxygen_external_yaml = """spec:
+  hostAliases:
+  - ip: "192.168.1.15"
+    hostnames:
+    - "jenkins.example.com"
+  volumes:
+  - hostPath:
+      path: /data/jenkins/repo_mirror
+      type: ""
+    name: volume-0
+  containers:
+  - name: jnlp
+    image: jenkinsci/jnlp-slave:3.29-1
+    imagePullPolicy: Always
+    command:
+    - /usr/local/bin/jenkins-slave
+    volumeMounts:
+    - mountPath: /home/jenkins/repo_cache
+      name: volume-0
+    resources:
+      limits:
+        memory: 8Gi
+      requests:
+        memory: 4Gi
+        cpu: 2
+  - name: doxygen
+    image: hrektts/doxygen:my_test_version
+    tty: true"""
+
   def selector_yaml = """spec:
   hostAliases:
   - ip: "192.168.1.15"
@@ -314,6 +343,9 @@ metadata:
     agent = loadScript("vars/k8sagent.groovy")
     parser = new MyYaml()
 
+    helper.registerAllowedMethod('renderTemplate', [String, Map]) { s,opts ->
+      loadScript("vars/renderTemplate.groovy")(s, opts)
+    }
   }
 
   @Test
@@ -432,6 +464,25 @@ metadata:
   @Test
   void testDoxygen() {
     def expected_yaml = small_doxygen_yaml
+    def processed_yaml = parser.merge([expected_yaml.toString()])
+
+    def expected = [
+        cloud: 'kubernetes',
+        yaml : processed_yaml
+    ]
+
+    def ret = agent(name: 'small+doxygen')
+
+    assertEquals "results", ret.entrySet().containsAll(expected.entrySet()), true
+    //assertEquals "results", expected.entrySet(), ret.entrySet()
+  }
+
+  @Test
+  void testDoxygenExternalVersion() {
+
+    binding.setVariable('TEMPLATE_DOXYGEN_IMAGE', "hrektts/doxygen:my_test_version")
+
+    def expected_yaml = small_doxygen_external_yaml
     def processed_yaml = parser.merge([expected_yaml.toString()])
 
     def expected = [

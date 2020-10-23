@@ -12,6 +12,18 @@ def call(Map opts = [:]) {
   String nodeSelector = opts.get('selector', '')
   String jnlpImage = opts.get('jnlpImage', '')
 
+  String doxygen_image
+
+  try {
+    doxygen_image = "${TEMPLATE_DOXYGEN_IMAGE}"
+  } catch (e) {
+    //println("TEMPLATE_DOXYGEN_IMAGE not defined")
+    doxygen_image = 'hrektts/doxygen:latest'
+  }
+
+  Map template_vars = [:]
+  template_vars['TEMPLATE_DOXYGEN_IMAGE'] = doxygen_image
+
   def ret = [:]
 
   def comps = name.split('\\+|-').toList()
@@ -24,6 +36,7 @@ def call(Map opts = [:]) {
   String template
   for (c in comps) {
     template = libraryResource 'podtemplates/' + c + '.yaml'
+    template = renderTemplate(template, template_vars)
     templates.add(template)
   }
 
@@ -45,6 +58,8 @@ spec:
 """
     templates.add(baseImage)
   }
+
+
 
   def myyaml = new MyYaml()
   def final_template = myyaml.merge(templates)
