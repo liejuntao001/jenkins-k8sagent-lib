@@ -258,6 +258,26 @@ metadata:
   nodeSelector:
     kubernetes.io/hostname: worker1"""
 
+  def jnlpimage_yaml = """spec:
+  hostAliases:
+  - ip: "192.168.1.15"
+    hostnames:
+    - "jenkins.example.com"
+  volumes:
+  - hostPath:
+      path: /data/jenkins/repo_mirror
+      type: ""
+    name: volume-0
+  containers:
+  - name: jnlp
+    image: jenkinsci/jnlp-slave:my_test_version
+    imagePullPolicy: Always
+    command:
+    - /usr/local/bin/jenkins-slave
+    volumeMounts:
+    - mountPath: /home/jenkins/repo_cache
+      name: volume-0"""
+
   @Before
   void setUp() {
     super.setUp()
@@ -407,6 +427,22 @@ metadata:
     ]
 
     def ret = agent(name: 'base', selector: 'kubernetes.io/hostname: worker1')
+
+    assertEquals "results", ret.entrySet().containsAll(expected.entrySet()), true
+    //assertEquals "results", expected.entrySet(), ret.entrySet()
+  }
+
+  @Test
+  void testJnlpImage() {
+    def expected_yaml = jnlpimage_yaml
+    def processed_yaml = parser.merge([expected_yaml.toString()])
+
+    def expected = [
+        cloud: 'kubernetes',
+        yaml : processed_yaml,
+    ]
+
+    def ret = agent(name: 'base', jnlpImage: 'jenkinsci/jnlp-slave:my_test_version')
 
     assertEquals "results", ret.entrySet().containsAll(expected.entrySet()), true
     //assertEquals "results", expected.entrySet(), ret.entrySet()

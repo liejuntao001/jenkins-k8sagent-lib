@@ -10,6 +10,7 @@ def call(Map opts = [:]) {
   String label = opts.get('label', defaultLabel)
   String cloud = opts.get('cloud', 'kubernetes')
   String nodeSelector = opts.get('selector', '')
+  String jnlpImage = opts.get('jnlpImage', '')
 
   def ret = [:]
 
@@ -33,6 +34,16 @@ spec:
     ${nodeSelector}
 """
     templates.add(selector)
+  }
+
+  if (jnlpImage) {
+    def baseImage = """
+spec:
+  containers:
+  - name: jnlp
+    image: ${jnlpImage}
+"""
+    templates.add(baseImage)
   }
 
   def myyaml = new MyYaml()
