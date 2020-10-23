@@ -236,6 +236,35 @@ metadata:
       - name: dind-storage
         mountPath: /var/lib/docker"""
 
+  def small_doxygen_yaml = """spec:
+  hostAliases:
+  - ip: "192.168.1.15"
+    hostnames:
+    - "jenkins.example.com"
+  volumes:
+  - hostPath:
+      path: /data/jenkins/repo_mirror
+      type: ""
+    name: volume-0
+  containers:
+  - name: jnlp
+    image: jenkinsci/jnlp-slave:3.29-1
+    imagePullPolicy: Always
+    command:
+    - /usr/local/bin/jenkins-slave
+    volumeMounts:
+    - mountPath: /home/jenkins/repo_cache
+      name: volume-0
+    resources:
+      limits:
+        memory: 8Gi
+      requests:
+        memory: 4Gi
+        cpu: 2
+  - name: doxygen
+    image: hrektts/doxygen:latest
+    tty: true"""
+
   def selector_yaml = """spec:
   hostAliases:
   - ip: "192.168.1.15"
@@ -395,6 +424,22 @@ metadata:
     ]
 
     def ret = agent(name: 'small-dind')
+
+    assertEquals "results", ret.entrySet().containsAll(expected.entrySet()), true
+    //assertEquals "results", expected.entrySet(), ret.entrySet()
+  }
+
+  @Test
+  void testDoxygen() {
+    def expected_yaml = small_doxygen_yaml
+    def processed_yaml = parser.merge([expected_yaml.toString()])
+
+    def expected = [
+        cloud: 'kubernetes',
+        yaml : processed_yaml
+    ]
+
+    def ret = agent(name: 'small+doxygen')
 
     assertEquals "results", ret.entrySet().containsAll(expected.entrySet()), true
     //assertEquals "results", expected.entrySet(), ret.entrySet()
